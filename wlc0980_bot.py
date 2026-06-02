@@ -5,7 +5,7 @@ import requests
 import os
 from telegram import Bot
 
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("Bot")
 CHANNEL_ID = "@financebotai0"
 
 bot = Bot(token=8834165485:AAG1gmI8F-mWOi2sbpLdxAodK43nPYHr5M4)
