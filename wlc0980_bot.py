@@ -5,10 +5,10 @@ import requests
 import os
 from telegram import Bot
 
-TOKEN = os.environ.get("bot")
+TOKEN = os.environ.get("TOKEN")
 CHANNEL_ID = "@financebotai0"
 
-bot = Bot(token=8834165485:AAG1gmI8F-mWOi2sbpLdxAodK43nPYHr5M4)
+bot = Bot(token=TOKEN)
 
 # 🔹 RSS FEEDS (change/add more)
 RSS_FEEDS = [
