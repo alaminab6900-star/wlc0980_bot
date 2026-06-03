@@ -1,11 +1,11 @@
 import asyncio
-import threading
 import random
 import feedparser
 import requests
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Bot
+import threading
 
 # 🔹 CONFIG
 TOKEN = os.environ.get("TOKEN")
@@ -17,7 +17,6 @@ bot = Bot(token=TOKEN)
 # CONTENT SYSTEM
 # -------------------------
 
-# RSS feeds
 RSS_FEEDS = [
     "https://feeds.feedburner.com/entrepreneur/latest",
     "https://www.forbes.com/business/feed/"
@@ -25,7 +24,7 @@ RSS_FEEDS = [
 
 posted_links = set()
 
-# Quotes
+# 💬 Quote
 def get_quote():
     try:
         res = requests.get("https://api.quotable.io/random")
@@ -34,11 +33,11 @@ def get_quote():
     except:
         return "Stay focused. Work hard 💪"
 
-# Image পোস্ট (🔥 attractive)
+# 🖼️ Image পোস্ট
 image_posts = [
     {
         "image": "https://i.imgur.com/3GvwNBf.jpg",
-        "caption": "💰 Discipline builds wealth\n\n🔥 Join: https://t.me/yourchannel"
+        "caption": "💰 Discipline builds wealth\n\n🔥 Join: https://t.me/financebotai0"
     },
     {
         "image": "https://i.imgur.com/ZV6vM9P.jpg",
@@ -72,12 +71,18 @@ async def post_image():
     )
 
 # -------------------------
-# AUTO LOOP
+# AUTO LOOP (FIXED)
 # -------------------------
 
 async def auto_post():
+    print("Bot started 🔥")
     while True:
         try:
+            print("Running loop...")
+
+            # 🔥 TEST POST (first time confirm)
+            await bot.send_message(chat_id=CHANNEL_ID, text="TEST POST ✅")
+
             choice = random.choice(["rss", "quote", "image"])
 
             if choice == "rss":
@@ -88,11 +93,12 @@ async def auto_post():
                 await post_image()
 
             print("Posted successfully ✅")
-            await asyncio.sleep(1800)  # 30 min
+
+            await asyncio.sleep(60)  # 🔥 TEST MODE (1 min)
 
         except Exception as e:
             print("Error:", e)
-            await asyncio.sleep(60)
+            await asyncio.sleep(30)
 
 # -------------------------
 # HTTP SERVER (Render fix)
@@ -109,14 +115,11 @@ def run_server():
     server.serve_forever()
 
 # -------------------------
-# MAIN RUN
+# MAIN RUN (FIXED)
 # -------------------------
 
-def start_bot():
-    asyncio.run(auto_post())
+# 🔥 server background-এ run
+threading.Thread(target=run_server).start()
 
-# 🔥 bot background thread-এ run হবে
-threading.Thread(target=start_bot).start()
-
-# 🔥 server main thread-এ run হবে
-run_server()
+# 🔥 bot main thread-এ run
+asyncio.run(auto_post())
