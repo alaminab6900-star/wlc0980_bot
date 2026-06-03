@@ -3,28 +3,49 @@ import random
 import feedparser
 import requests
 import os
+import sqlite3
+import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Bot
 import threading
 
-# 🔹 CONFIG
+# -------------------------
+# LOGGING (PRO)
+# -------------------------
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
+
+# -------------------------
+# CONFIG
+# -------------------------
 TOKEN = os.environ.get("TOKEN")
 CHANNELS = ["@financebotai0", "@earnex_bdt"]
 
 bot = Bot(token=TOKEN)
 
 # -------------------------
+# DATABASE (IMPORTANT 🔥)
+# -------------------------
+conn = sqlite3.connect("bot.db", check_same_thread=False)
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS posted_links (
+    link TEXT PRIMARY KEY
+)
+""")
+conn.commit()
+
+# -------------------------
 # CONTENT SYSTEM
 # -------------------------
-
 RSS_FEEDS = [
     "https://feeds.feedburner.com/entrepreneur/latest",
     "https://www.forbes.com/business/feed/"
 ]
 
-posted_links = set()
-
-# 💬 Quote
+# -------------------------
+# QUOTE
+# -------------------------
 def get_quote():
     try:
         res = requests.get("https://api.quotable.io/random", timeout=10)
@@ -33,7 +54,9 @@ def get_quote():
     except:
         return "Stay focused. Work hard 💪"
 
-# 🖼️ Image
+# -------------------------
+# IMAGE
+# -------------------------
 image_posts = [
     {
         "image": "https://picsum.photos/800/600",
@@ -46,6 +69,41 @@ image_posts = [
 ]
 
 # -------------------------
+# SAFE SEND
+# -------------------------
+async def send_to_all(text=None, photo=None, caption=None):
+    success = False
+
+    for ch in CHANNELS:
+        try:
+            if photo:
+                await bot.send_photo(chat_id=ch, photo=photo, caption=caption)
+            else:
+                await bot.send_message(chat_id=ch, text=text)
+
+            logging.info(f"Sent to {ch}")
+            success = True
+
+        except Exception as e:
+            logging.error(f"Error in {ch}: {e}")
+
+    return success
+
+# -------------------------
+# CHECK DB
+# -------------------------
+def is_posted(link):
+    cur.execute("SELECT 1 FROM posted_links WHERE link=?", (link,))
+    return cur.fetchone() is not None
+
+def save_post(link):
+    try:
+        cur.execute("INSERT INTO posted_links (link) VALUES (?)", (link,))
+        conn.commit()
+    except:
+        pass
+
+# -------------------------
 # POST FUNCTIONS
 # -------------------------
 
@@ -53,61 +111,67 @@ async def post_rss():
     for feed_url in RSS_FEEDS:
         try:
             feed = feedparser.parse(feed_url)
+
             for entry in feed.entries[:5]:
-                if entry.link not in posted_links:
-                    msg = f"📰 {entry.title}\n\nRead more: {entry.link}"
+                if not is_posted(entry.link):
 
-                    for ch in CHANNELS:
-                        await bot.send_message(chat_id=ch, text=msg)
+                    msg = f"📰 {entry.title}\n\n🔗 {entry.link}"
 
-                    posted_links.add(entry.link)
-                    return
+                    success = await send_to_all(text=msg)
+
+                    if success:
+                        save_post(entry.link)
+                        return True
+
         except Exception as e:
-            print("RSS Error:", e)
+            logging.error(f"RSS Error: {e}")
+
+    return False
+
 
 async def post_quote():
     text = get_quote()
-    for ch in CHANNELS:
-        await bot.send_message(chat_id=ch, text=text)
+    await send_to_all(text=text)
+
 
 async def post_image():
     post = random.choice(image_posts)
-
-    for ch in CHANNELS:
-        await bot.send_photo(
-            chat_id=ch,
-            photo=post["image"],
-            caption=post["caption"]
-        )
+    await send_to_all(photo=post["image"], caption=post["caption"])
 
 # -------------------------
 # AUTO LOOP
 # -------------------------
 
 async def auto_post():
-    print("Bot started 🔥")
+    logging.info("Bot started 🚀")
 
     while True:
         try:
             choice = random.choice(["rss", "quote", "image"])
 
             if choice == "rss":
-                await post_rss()
+                success = await post_rss()
+
+                if not success:
+                    logging.info("RSS empty → fallback quote")
+                    await post_quote()
+
             elif choice == "quote":
                 await post_quote()
+
             else:
                 await post_image()
 
-            print("Posted successfully ✅")
+            logging.info("Posted successfully ✅")
 
             await asyncio.sleep(1800)  # 30 min
 
         except Exception as e:
-            print("Main Error:", e)
+            logging.error(f"Main Error: {e}")
             await asyncio.sleep(60)
 
 # -------------------------
-# HTTP SERVER (Render fix)
+# HTTP SERVER
 # -------------------------
 
 class Handler(BaseHTTPRequestHandler):
