@@ -24,7 +24,6 @@ RSS_FEEDS = [
 
 posted_links = set()
 
-# 💬 Quote
 def get_quote():
     try:
         res = requests.get("https://api.quotable.io/random")
@@ -33,7 +32,6 @@ def get_quote():
     except:
         return "Stay focused. Work hard 💪"
 
-# 🖼️ Image posts (FIXED SOURCE ✅)
 image_posts = [
     {
         "image": "https://picsum.photos/800/600",
@@ -46,7 +44,7 @@ image_posts = [
 ]
 
 # -------------------------
-# POST FUNCTIONS
+# POST FUNCTIONS (FIXED)
 # -------------------------
 
 async def post_rss():
@@ -55,20 +53,26 @@ async def post_rss():
         for entry in feed.entries[:5]:
             if entry.link not in posted_links:
                 msg = f"📰 {entry.title}\n\nRead more: {entry.link}"
-                await bot.send_message(chat_id=CHANNEL_ID, text=msg)
+
+                for ch in CHANNELS:
+                    await bot.send_message(chat_id=ch, text=msg)
+
                 posted_links.add(entry.link)
                 return
 
 async def post_quote():
-    await bot.send_message(chat_id=CHANNEL_ID, text=get_quote())
+    for ch in CHANNELS:
+        await bot.send_message(chat_id=ch, text=get_quote())
 
 async def post_image():
     post = random.choice(image_posts)
-    await bot.send_photo(
-        chat_id=CHANNEL_ID,
-        photo=post["image"],
-        caption=post["caption"]
-    )
+
+    for ch in CHANNELS:
+        await bot.send_photo(
+            chat_id=ch,
+            photo=post["image"],
+            caption=post["caption"]
+        )
 
 # -------------------------
 # AUTO LOOP
@@ -90,14 +94,14 @@ async def auto_post():
 
             print("Posted successfully ✅")
 
-            await asyncio.sleep(1800)  # ⏱️ 30 minutes
+            await asyncio.sleep(1800)
 
         except Exception as e:
             print("Error:", e)
             await asyncio.sleep(60)
 
 # -------------------------
-# HTTP SERVER (Render fix)
+# HTTP SERVER
 # -------------------------
 
 class Handler(BaseHTTPRequestHandler):
@@ -114,8 +118,5 @@ def run_server():
 # MAIN RUN
 # -------------------------
 
-# 🔥 server background-এ
 threading.Thread(target=run_server).start()
-
-# 🔥 bot main-এ
 asyncio.run(auto_post())
