@@ -9,7 +9,7 @@ import threading
 
 # 🔹 CONFIG
 TOKEN = os.environ.get("TOKEN")
-CHANNEL_ID = "@financebotai0"
+CHANNELS = ["@financebotai0", "@earnex_bdt"]
 
 bot = Bot(token=TOKEN)
 
