@@ -33,15 +33,15 @@ def get_quote():
     except:
         return "Stay focused. Work hard 💪"
 
-# 🖼️ Image পোস্ট
+# 🖼️ Image posts (FIXED SOURCE ✅)
 image_posts = [
     {
-        "image": "https://i.imgur.com/3GvwNBf.jpg",
-        "caption": "💰 Discipline builds wealth\n\n🔥 Join: https://t.me/financebotai0"
+        "image": "https://picsum.photos/800/600",
+        "caption": "💰 Discipline builds wealth\n\n📈 Follow: https://t.me/financebotai0"
     },
     {
-        "image": "https://i.imgur.com/ZV6vM9P.jpg",
-        "caption": "🚨 Stop wasting money!\n\n📈 Start investing today!"
+        "image": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d",
+        "caption": "🚀 Start investing today!\n\n🔥 Grow your money smartly"
     }
 ]
 
@@ -54,7 +54,7 @@ async def post_rss():
         feed = feedparser.parse(feed_url)
         for entry in feed.entries[:5]:
             if entry.link not in posted_links:
-                msg = f"📰 {entry.title}\n\nRead: {entry.link}"
+                msg = f"📰 {entry.title}\n\nRead more: {entry.link}"
                 await bot.send_message(chat_id=CHANNEL_ID, text=msg)
                 posted_links.add(entry.link)
                 return
@@ -71,18 +71,14 @@ async def post_image():
     )
 
 # -------------------------
-# AUTO LOOP (FIXED)
+# AUTO LOOP
 # -------------------------
 
 async def auto_post():
     print("Bot started 🔥")
+
     while True:
         try:
-            print("Running loop...")
-
-            # 🔥 TEST POST (first time confirm)
-            await bot.send_message(chat_id=CHANNEL_ID, text="TEST POST ✅")
-
             choice = random.choice(["rss", "quote", "image"])
 
             if choice == "rss":
@@ -94,11 +90,11 @@ async def auto_post():
 
             print("Posted successfully ✅")
 
-            await asyncio.sleep(60)  # 🔥 TEST MODE (1 min)
+            await asyncio.sleep(1800)  # ⏱️ 30 minutes
 
         except Exception as e:
             print("Error:", e)
-            await asyncio.sleep(30)
+            await asyncio.sleep(60)
 
 # -------------------------
 # HTTP SERVER (Render fix)
@@ -115,11 +111,11 @@ def run_server():
     server.serve_forever()
 
 # -------------------------
-# MAIN RUN (FIXED)
+# MAIN RUN
 # -------------------------
 
-# 🔥 server background-এ run
+# 🔥 server background-এ
 threading.Thread(target=run_server).start()
 
-# 🔥 bot main thread-এ run
+# 🔥 bot main-এ
 asyncio.run(auto_post())
